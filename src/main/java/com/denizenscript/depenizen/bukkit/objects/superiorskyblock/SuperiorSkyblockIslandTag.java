@@ -20,9 +20,11 @@ import com.denizenscript.denizencore.utilities.text.StringHolder;
 import com.denizenscript.depenizen.bukkit.bridges.SuperiorSkyblockBridge;
 import org.bukkit.Registry;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -246,10 +248,31 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // @returns TimeTag
         // @plugin Depenizen, SuperiorSkyblock
         // @description
-        // Returns the time an island was created.
+        // Returns a TimeTag of when an island was created.
+        // The amount of detail shown depends on the 'Date Format' setting in SuperiorSkyblock's configuration file.
+        // See <@link objecttype TimeTag> to see what is required.
         // -->
         tagProcessor.registerTag(TimeTag.class, "creation_time", (attribute, object) -> {
-            return new TimeTag(LocalDateTime.parse(object.getIsland().getCreationTimeDate(), DateTimeFormatter.ofPattern(SuperiorSkyblockPlugin.getPlugin().getSettings().getDateFormat())).atZone(ZoneOffset.UTC));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(SuperiorSkyblockPlugin.getPlugin().getSettings().getDateFormat());
+            try {
+                return new TimeTag(LocalDateTime.parse(object.getIsland().getCreationTimeDate(), formatter).atZone(ZoneOffset.UTC));
+            }
+            catch (DateTimeParseException e) {
+                try {
+                    LocalDate date = LocalDate.parse(object.getIsland().getCreationTimeDate(), formatter);
+                    return new TimeTag(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 0, 0, 0, 0, ZoneOffset.UTC);
+                }
+                catch (DateTimeParseException ex) {
+                    attribute.echoError("Error with the 'SuperiorSkyblockIslandTag.creation_time' tag: "
+                            + "SuperiorSkyblock's 'Date Format' setting is missing something necessary to form a TimeTag.");
+                    return null;
+                }
+            }
+            catch (IllegalArgumentException e) {
+                attribute.echoError("Error with the 'SuperiorSkyblockIslandTag.creation_time' tag: "
+                        + "SuperiorSkyblock's 'Date Format' setting has characters that do not correspond to a period of time.");
+                return null;
+            }
         });
 
         // <--[tag]
