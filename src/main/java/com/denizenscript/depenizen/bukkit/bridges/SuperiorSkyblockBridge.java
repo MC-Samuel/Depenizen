@@ -21,6 +21,10 @@ public class SuperiorSkyblockBridge extends Bridge {
     public void init() {
         ScriptEvent.registerScriptEvent(SuperiorSkyblockIslandCreatedScriptEvent.class);
         ScriptEvent.registerScriptEvent(SuperiorSkyblockIslandDisbandedScriptEvent.class);
+        ScriptEvent.registerScriptEvent(SuperiorSkyblockIslandInviteScriptEvent.class);
+        ScriptEvent.registerScriptEvent(SuperiorSkyblockIslandJoinScriptEvent.class);
+        ScriptEvent.registerScriptEvent(SuperiorSkyblockIslandKickScriptEvent.class);
+        ScriptEvent.registerScriptEvent(SuperiorSkyblockPlayerLeavesIslandScriptEvent.class);
         SuperiorSkyblockLocationExtensions.register();
         SuperiorSkyblockPlayerExtensions.register();
         ObjectFetcher.registerWithObjectFetcher(SuperiorSkyblockIslandTag.class, SuperiorSkyblockIslandTag.tagProcessor);
