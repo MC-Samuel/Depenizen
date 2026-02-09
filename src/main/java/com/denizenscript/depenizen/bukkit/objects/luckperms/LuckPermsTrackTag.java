@@ -222,6 +222,6 @@ public class LuckPermsTrackTag implements ObjectTag {
         });
     }
 
-    public static final ObjectTagProcessor<LuckPermsTrackTag> tagProcessor = new ObjectTagProcessor<>();
+    public static ObjectTagProcessor<LuckPermsTrackTag> tagProcessor = new ObjectTagProcessor<>();
 
 }

@@ -155,6 +155,6 @@ public class LuckPermsGroupTag implements ObjectTag {
         });
     }
 
-    public static final ObjectTagProcessor<LuckPermsGroupTag> tagProcessor = new ObjectTagProcessor<>();
+    public static ObjectTagProcessor<LuckPermsGroupTag> tagProcessor = new ObjectTagProcessor<>();
 
 }

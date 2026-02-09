@@ -311,7 +311,7 @@ public class JobsJobTag implements ObjectTag, Adjustable {
         });
     }
 
-    public static final ObjectTagProcessor<JobsJobTag> tagProcessor = new ObjectTagProcessor<>();
+    public static ObjectTagProcessor<JobsJobTag> tagProcessor = new ObjectTagProcessor<>();
 
     @Override
     public ObjectTag getObjectAttribute(Attribute attribute) {

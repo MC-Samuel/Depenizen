@@ -163,7 +163,7 @@ public class ShopKeeperTag implements ObjectTag {
 
     }
 
-    public static final ObjectTagProcessor<ShopKeeperTag> tagProcessor = new ObjectTagProcessor<>();
+    public static ObjectTagProcessor<ShopKeeperTag> tagProcessor = new ObjectTagProcessor<>();
 
     @Override
     public ObjectTag getObjectAttribute(Attribute attribute) {
