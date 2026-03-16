@@ -14,14 +14,14 @@ import com.garbagemule.MobArena.framework.Arena;
 
 public class MobArenaPlayerExtensions {
 
-    public static SlowWarning mobArenaPlayerTags = new SlowWarning("mobArenaPlayerTags", "Tags in the format 'PlayerTag.mobarena.x' have been deprecated: check the meta site for updated versions.");
+    public static SlowWarning mobArenaPlayerTags = new SlowWarning("mobArenaPlayerTags", "Tags in the 'PlayerTag.mobarena.x' format have been deprecated: check the meta docs for more information.");
 
-    public static Arena getArena(PlayerTag player) {
+    public static Arena getCurrentArena(PlayerTag player) {
         return ((MobArena) MobArenaBridge.instance.plugin).getArenaMaster().getArenaWithPlayer(player.getPlayerEntity());
     }
 
-    public static ArenaPlayer getArenaPlayer(PlayerTag player) {
-        return getArena(player).getArenaPlayer(player.getPlayerEntity());
+    public static ArenaPlayer getArenaPlayer(PlayerTag player, Arena arena) {
+        return arena.getArenaPlayer(player.getPlayerEntity());
     }
 
     public static void register() {
@@ -34,7 +34,7 @@ public class MobArenaPlayerExtensions {
         // Returns whether the player is in a mobarena.
         // -->
         PlayerTag.tagProcessor.registerTag(ElementTag.class, "in_mobarena", (attribute, player) -> {
-            return new ElementTag(getArena(player) != null);
+            return new ElementTag(getCurrentArena(player) != null);
         });
 
         // <--[tag]
@@ -46,7 +46,8 @@ public class MobArenaPlayerExtensions {
         // NOTE: Requires the player to be in an arena.
         // -->
         PlayerTag.tagProcessor.registerTag(MobArenaArenaTag.class, "current_mobarena", (attribute, player) -> {
-            return getArena(player) != null ? new MobArenaArenaTag(getArena(player)) : null;
+            Arena arena = getCurrentArena(player);
+            return arena != null ? new MobArenaArenaTag(arena) : null;
         });
 
         // <--[tag]
@@ -58,7 +59,8 @@ public class MobArenaPlayerExtensions {
         // NOTE: Requires the player to be in an arena.
         // -->
         PlayerTag.tagProcessor.registerTag(ElementTag.class, "mobarena_class", (attribute, player) -> {
-            return getArena(player) != null ? new ElementTag(getArenaPlayer(player).getArenaClass().getConfigName(), true) : null;
+            Arena arena = getCurrentArena(player);
+            return arena != null ? new ElementTag(getArenaPlayer(player, arena).getArenaClass().getConfigName(), true) : null;
         });
 
         // <--[tag]
@@ -66,8 +68,8 @@ public class MobArenaPlayerExtensions {
         // @returns MapTag
         // @plugin Depenizen, MobArena
         // @description
-        // Returns the stats of a player in their current arena.
-        // Valid keys are 'KILLS', 'DAMAGE_DONE', 'DAMAGE_TAKEN', 'LAST_WAVE', 'TIMES_SWUNG', and 'TIMES_HIT'.
+        // Returns the stats of a player in the specified arena.
+        // Includes keys 'KILLS', 'DAMAGE_DONE', 'DAMAGE_TAKEN', 'LAST_WAVE', 'TIMES_SWUNG', and 'TIMES_HIT' with ElementTag(Number) values.
         // -->
         PlayerTag.tagProcessor.registerTag(MapTag.class, "mobarena_stats", (attribute, player) -> {
             if (getArena(player) == null) {
@@ -92,46 +94,47 @@ public class MobArenaPlayerExtensions {
             // @attribute <PlayerTag.mobarena.in_arena>
             // @returns ElementTag(Boolean)
             // @plugin Depenizen, MobArena
-            // @deprecated Use 'PlayerTag.in_mobarena'
+            // @deprecated use 'PlayerTag.in_mobarena'
             // @description
             // Deprecated in favor of <@link tag PlayerTag.in_mobarena>.
             // -->
             if (attribute.startsWith("in_arena", 2)) {
                 attribute.fulfill(1);
-                return new ElementTag(getArena(player) != null);
+                return new ElementTag(getCurrentArena(player) != null);
             }
-            if (getArena(player) != null) {
+            Arena arena = getCurrentArena(player);
+            if (arena != null) {
 
                 // <--[tag]
                 // @attribute <PlayerTag.mobarena.current_arena>
                 // @returns MobArenaArenaTag
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.current_mobarena'
+                // @deprecated use 'PlayerTag.current_mobarena'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.current_mobarena>.
                 // -->
                 if (attribute.startsWith("current_arena", 2)) {
                     attribute.fulfill(1);
-                    return new MobArenaArenaTag(getArena(player));
+                    return new MobArenaArenaTag(arena);
                 }
 
                 // <--[tag]
                 // @attribute <PlayerTag.mobarena.class>
                 // @returns ElementTag
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_class'
+                // @deprecated use 'PlayerTag.mobarena_class'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_class>.
                 // -->
                 else if (attribute.startsWith("class", 2)) {
                     attribute.fulfill(1);
-                    return new ElementTag(getArenaPlayer(player).getArenaClass().getConfigName(), true);
+                    return new ElementTag(getArenaPlayer(player, arena).getArenaClass().getConfigName(), true);
                 }
             }
 
             if (attribute.startsWith("stats", 2)) {
                 attribute.fulfill(1);
-                ArenaPlayerStatistics stats = getArenaPlayer(player).getStats();
+                ArenaPlayerStatistics stats = getArenaPlayer(player, arena).getStats();
                 if (stats == null) {
                     return null;
                 }
@@ -140,7 +143,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].kills>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[kills]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[kills]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'KILLS' key.
                 // -->
@@ -153,7 +156,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_done>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[damage_done]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[damage_done]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_DONE' key.
                 // @description
@@ -168,7 +171,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_taken>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[damage_taken]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[damage_taken]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_TAKEN' key.
                 // -->
@@ -181,7 +184,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].last_wave>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[last_wave]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[last_wave]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'LAST_WAVE' key.
                 // -->
@@ -194,7 +197,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_swung>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[times_swung]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[times_swung]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_SWUNG' key.
                 // -->
@@ -207,7 +210,7 @@ public class MobArenaPlayerExtensions {
                 // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_hit>
                 // @returns ElementTag(Number)
                 // @plugin Depenizen, MobArena
-                // @deprecated Use 'PlayerTag.mobarena_stats.get[times_hit]'
+                // @deprecated use 'PlayerTag.mobarena_stats.get[times_hit]'
                 // @description
                 // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_HIT' key.
                 // -->
