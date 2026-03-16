@@ -26,13 +26,13 @@ public class MagicSpellsBridge extends Bridge {
         public void register() {
 
             // <--[tag]
-            // @attribute <magicspells.list_spells>
+            // @attribute <magicspells.spells>
             // @returns ListTag
             // @plugin Depenizen, MagicSpells
             // @description
             // Returns a list of all registered spells.
             // -->
-            tagProcessor.registerTag(ListTag.class, "list_spells", (attribute, object) -> {
+            tagProcessor.registerTag(ListTag.class, "spells", (attribute, object) -> {
                 return new ListTag(MagicSpells.spells(), spell -> new ElementTag(spell.getName(), true));
             });
         }
