@@ -68,15 +68,16 @@ public class MobArenaPlayerExtensions {
         // @returns MapTag
         // @plugin Depenizen, MobArena
         // @description
-        // Returns the stats of a player in the specified arena.
+        // Returns the current stats of a player.
         // Includes keys 'KILLS', 'DAMAGE_DONE', 'DAMAGE_TAKEN', 'LAST_WAVE', 'TIMES_SWUNG', and 'TIMES_HIT' with ElementTag(Number) values.
+        // NOTE: Requires the player to be in an arena.
         // -->
         PlayerTag.tagProcessor.registerTag(MapTag.class, "mobarena_stats", (attribute, player) -> {
-            if (getArena(player) == null) {
+            if (getCurrentArena(player) == null) {
                 attribute.echoError("This player is not in an arena.");
                 return null;
             }
-            ArenaPlayerStatistics stats = getArenaPlayer(player).getStats();
+            ArenaPlayerStatistics stats = getArenaPlayer(player, getCurrentArena(player)).getStats();
             MapTag values = new MapTag();
             values.putObject("kills", new ElementTag(stats.getInt("kills")));
             values.putObject("damage_done", new ElementTag(stats.getInt("dmgDone")));
@@ -130,93 +131,93 @@ public class MobArenaPlayerExtensions {
                     attribute.fulfill(1);
                     return new ElementTag(getArenaPlayer(player, arena).getArenaClass().getConfigName(), true);
                 }
-            }
 
-            if (attribute.startsWith("stats", 2)) {
-                attribute.fulfill(1);
-                ArenaPlayerStatistics stats = getArenaPlayer(player, arena).getStats();
-                if (stats == null) {
-                    return null;
-                }
-
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].kills>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[kills]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'KILLS' key.
-                // -->
-                if (attribute.startsWith("kills", 2)) {
+                else if (attribute.startsWith("stats", 2)) {
                     attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("kills"));
-                }
+                    ArenaPlayerStatistics stats = getArenaPlayer(player, arena).getStats();
+                    if (stats == null) {
+                        return null;
+                    }
 
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_done>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[damage_done]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_DONE' key.
-                // @description
-                // Returns the amount of damage the player has dealt in the arena.
-                // -->
-                else if (attribute.startsWith("damage_done", 2)) {
-                    attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("dmgDone"));
-                }
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].kills>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[kills]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'KILLS' key.
+                    // -->
+                    if (attribute.startsWith("kills", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("kills"));
+                    }
 
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_taken>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[damage_taken]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_TAKEN' key.
-                // -->
-                else if (attribute.startsWith("damage_taken", 2)) {
-                    attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("dmgTaken"));
-                }
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_done>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[damage_done]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_DONE' key.
+                    // @description
+                    // Returns the amount of damage the player has dealt in the arena.
+                    // -->
+                    else if (attribute.startsWith("damage_done", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("dmgDone"));
+                    }
 
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].last_wave>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[last_wave]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'LAST_WAVE' key.
-                // -->
-                else if (attribute.startsWith("last_wave", 2)) {
-                    attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("lastWave"));
-                }
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].damage_taken>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[damage_taken]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'DAMAGE_TAKEN' key.
+                    // -->
+                    else if (attribute.startsWith("damage_taken", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("dmgTaken"));
+                    }
 
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_swung>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[times_swung]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_SWUNG' key.
-                // -->
-                else if (attribute.startsWith("times_swung", 2)) {
-                    attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("swings"));
-                }
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].last_wave>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[last_wave]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'LAST_WAVE' key.
+                    // -->
+                    else if (attribute.startsWith("last_wave", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("lastWave"));
+                    }
 
-                // <--[tag]
-                // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_hit>
-                // @returns ElementTag(Number)
-                // @plugin Depenizen, MobArena
-                // @deprecated use 'PlayerTag.mobarena_stats.get[times_hit]'
-                // @description
-                // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_HIT' key.
-                // -->
-                else if (attribute.startsWith("times_hit", 2)) {
-                    attribute.fulfill(1);
-                    return new ElementTag(stats.getInt("hits"));
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_swung>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[times_swung]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_SWUNG' key.
+                    // -->
+                    else if (attribute.startsWith("times_swung", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("swings"));
+                    }
+
+                    // <--[tag]
+                    // @attribute <PlayerTag.mobarena.stats[<mobarena>].times_hit>
+                    // @returns ElementTag(Number)
+                    // @plugin Depenizen, MobArena
+                    // @deprecated use 'PlayerTag.mobarena_stats.get[times_hit]'
+                    // @description
+                    // Deprecated in favor of <@link tag PlayerTag.mobarena_stats> with the 'TIMES_HIT' key.
+                    // -->
+                    else if (attribute.startsWith("times_hit", 2)) {
+                        attribute.fulfill(1);
+                        return new ElementTag(stats.getInt("hits"));
+                    }
                 }
             }
             return null;
