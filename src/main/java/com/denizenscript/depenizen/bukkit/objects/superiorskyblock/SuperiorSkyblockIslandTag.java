@@ -7,13 +7,13 @@ import com.bgsoftware.superiorskyblock.api.enums.Rating;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.island.IslandFlag;
 import com.bgsoftware.superiorskyblock.api.world.Dimension;
+import com.bgsoftware.superiorskyblock.api.wrappers.WorldPosition;
 import com.denizenscript.denizen.objects.*;
 import com.denizenscript.denizencore.objects.*;
 import com.denizenscript.denizencore.objects.core.*;
 import com.denizenscript.denizencore.tags.Attribute;
 import com.denizenscript.denizencore.tags.ObjectTagProcessor;
 import com.denizenscript.denizencore.tags.TagContext;
-import com.bgsoftware.superiorskyblock.api.wrappers.WorldPosition;
 import com.denizenscript.denizencore.utilities.CoreUtilities;
 import com.denizenscript.denizencore.utilities.debugging.Debug;
 import com.denizenscript.denizencore.utilities.text.StringHolder;
@@ -263,14 +263,12 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
                     return new TimeTag(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 0, 0, 0, 0, ZoneOffset.UTC);
                 }
                 catch (DateTimeParseException ex) {
-                    attribute.echoError("Error with the 'SuperiorSkyblockIslandTag.creation_time' tag: "
-                            + "SuperiorSkyblock's 'Date Format' setting is missing something necessary to form a TimeTag.");
+                    attribute.echoError("SuperiorSkyblock's 'Date Format' setting is missing something necessary to form a TimeTag.");
                     return null;
                 }
             }
             catch (IllegalArgumentException e) {
-                attribute.echoError("Error with the 'SuperiorSkyblockIslandTag.creation_time' tag: "
-                        + "SuperiorSkyblock's 'Date Format' setting has characters that do not correspond to a period of time.");
+                attribute.echoError("SuperiorSkyblock's 'Date Format' setting has characters that do not correspond to a period of time.");
                 return null;
             }
         });
