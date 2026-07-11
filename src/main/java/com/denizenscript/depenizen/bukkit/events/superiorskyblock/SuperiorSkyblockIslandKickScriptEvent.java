@@ -18,6 +18,8 @@ public class SuperiorSkyblockIslandKickScriptEvent extends BukkitScriptEvent imp
     //
     // @Triggers when a player is kicked from a SuperiorSkyblock island
     //
+    // @Cancellable true
+    //
     // @Context
     // <context.island> returns a SuperiorSkyblockIslandTag of the island.
     // <context.kicker> returns a PlayerTag of who kicked the player.
