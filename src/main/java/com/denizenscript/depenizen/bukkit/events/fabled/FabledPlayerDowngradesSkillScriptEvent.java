@@ -1,10 +1,12 @@
 package com.denizenscript.depenizen.bukkit.events.fabled;
 
-import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizen.events.BukkitScriptEvent;
-import com.denizenscript.denizencore.objects.core.ElementTag;
+import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizencore.objects.ObjectTag;
+import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.scripts.ScriptEntryData;
+import com.denizenscript.depenizen.bukkit.bridges.FabledBridge;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import studio.magemonkey.fabled.api.event.PlayerSkillDowngradeEvent;
@@ -13,15 +15,13 @@ public class FabledPlayerDowngradesSkillScriptEvent extends BukkitScriptEvent im
 
     // <--[event]
     // @Events
-    // fabled player downgrades
+    // fabled player downgrades <'skill'>
     //
     // @Location true
     //
     // @Cancellable true
     //
     // @Triggers when a player downgrades a skill in Fabled.
-    //
-    // @Switch skill:<skill> to only process the event if the skill matches the specified matcher.
     //
     // @Context
     // <context.level> returns the level the player went down to.
@@ -37,17 +37,23 @@ public class FabledPlayerDowngradesSkillScriptEvent extends BukkitScriptEvent im
     // -->
 
     public FabledPlayerDowngradesSkillScriptEvent() {
-        registerCouldMatcher("fabled player downgrades");
+        registerCouldMatcher("fabled|skillapi player downgrades <'skill'>");
     }
 
     public PlayerSkillDowngradeEvent event;
+    public Player player;
+    public String skill;
 
     @Override
     public boolean matches(ScriptPath path) {
-        if (!runGenericSwitchCheck(path, "skill", event.getDowngradedSkill().toString())) {
+        if (path.eventArgLowerAt(0).equals("skillapi")) {
+            FabledBridge.oldSkillApiEvents.warn();
+        }
+        String skill = path.eventArgLowerAt(3);
+        if (!skill.equals("skill") && !skill.equals(this.skill)) {
             return false;
         }
-        if (!runInCheck(path, event.getPlayerData().getPlayer().getLocation())) {
+        if (!runInCheck(path, player.getLocation())) {
             return false;
         }
         return super.matches(path);
@@ -55,7 +61,7 @@ public class FabledPlayerDowngradesSkillScriptEvent extends BukkitScriptEvent im
 
     @Override
     public ScriptEntryData getScriptEntryData() {
-        return new BukkitScriptEntryData(event.getPlayerData().getPlayer());
+        return new BukkitScriptEntryData(player);
     }
 
     @Override
@@ -63,7 +69,7 @@ public class FabledPlayerDowngradesSkillScriptEvent extends BukkitScriptEvent im
         return switch (name) {
             case "level" -> new ElementTag(event.getDowngradedSkill().getLevel());
             case "refund" -> new ElementTag(event.getRefund());
-            case "skill" -> new ElementTag(event.getDowngradedSkill().getData().getName(), true);
+            case "skill" -> new ElementTag(skill, true);
             default -> super.getContext(name);
         };
     }
@@ -71,6 +77,8 @@ public class FabledPlayerDowngradesSkillScriptEvent extends BukkitScriptEvent im
     @EventHandler
     public void onFabledPlayerDowngradesSkill(PlayerSkillDowngradeEvent event) {
         this.event = event;
+        player = event.getPlayerData().getPlayer();
+        skill = event.getDowngradedSkill().getData().getName();
         fire(event);
     }
 }

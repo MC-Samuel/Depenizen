@@ -2,17 +2,23 @@ package com.denizenscript.depenizen.bukkit.properties.fabled;
 
 import com.denizenscript.denizen.objects.ItemTag;
 import com.denizenscript.denizen.objects.MaterialTag;
-import com.denizenscript.depenizen.bukkit.objects.fabled.FabledClassTag;
 import com.denizenscript.denizen.objects.PlayerTag;
+import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.DurationTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
+import com.denizenscript.denizencore.utilities.debugging.SlowWarning;
+import com.denizenscript.depenizen.bukkit.objects.fabled.FabledClassTag;
 import studio.magemonkey.fabled.Fabled;
 import studio.magemonkey.fabled.api.classes.FabledClass;
-import studio.magemonkey.fabled.api.player.*;
+import studio.magemonkey.fabled.api.player.PlayerClass;
+import studio.magemonkey.fabled.api.player.PlayerData;
+import studio.magemonkey.fabled.api.player.PlayerSkill;
 import studio.magemonkey.fabled.api.skills.Skill;
 import studio.magemonkey.fabled.manager.FabledAttribute;
 
 public class FabledPlayerExtensions {
+
+    public static SlowWarning oldSkillApiPlayerTags = new SlowWarning("oldSkillApiPlayerTags", "Tags in the format 'PlayerTag.skillapi.x' have been deprecated: use 'PlayerTag.fabled_x'. See the meta site for more information.");
 
     static PlayerClass playerClass;
     static PlayerSkill playerSkill;
@@ -310,5 +316,324 @@ public class FabledPlayerExtensions {
             playerSkill = getPlayer(player).getSkill(skill.asString());
             return playerSkill != null ? new ElementTag(playerSkill.getStatus()) : null;
         }, "skillapi.skill_status");
+
+        PlayerTag.tagProcessor.registerTag(ObjectTag.class, "skillapi", (attribute, player) -> {
+            oldSkillApiPlayerTags.warn(attribute.context);
+            PlayerData data = getPlayer(player);
+            attribute.fulfill(1);
+
+            // <--[tag]
+            // @attribute <PlayerTag.skillapi.main_class>
+            // @returns FabledClassTag
+            // @plugin Depenizen, SkillAPI
+            // @deprecated use 'PlayerTag.fabled_main_class'.
+            // @description
+            // Deprecated in favor of <@link tag PlayerTag.fabled_main_class>.
+            // -->
+            if (attribute.startsWith("main_class")) {
+                if (data == null || data.getMainClass() == null) {
+                    return null;
+                }
+                return new FabledClassTag(data.getMainClass().getData());
+            }
+
+            // <--[tag]
+            // @attribute <PlayerTag.skillapi.in_class[<class>]>
+            // @returns ElementTag(Boolean)
+            // @plugin Depenizen, SkillAPI
+            // @deprecated use 'PlayerTag.fabled_in_class[<class>]'.
+            // @description
+            // Deprecated in favor of <@link tag PlayerTag.fabled_in_class[<class>]>.
+            // -->
+            if (attribute.startsWith("in_class")) {
+                if (!attribute.hasParam()) {
+                    return new ElementTag(data.hasClass());
+                }
+                FabledClassTag testClass = attribute.paramAsType(FabledClassTag.class);
+                if (testClass == null) {
+                    return null;
+                }
+                return new ElementTag(data.isExactClass(testClass.getFabledClass()));
+            }
+
+            // <--[tag]
+            // @attribute <PlayerTag.skillapi.has_skill[<skill>]>
+            // @returns ElementTag(Boolean)
+            // @plugin Depenizen, SkillAPI
+            // @deprecated use 'PlayerTag.fabled_has_skill[<skill>]'.
+            // @description
+            // Deprecated in favor of <@link tag PlayerTag.fabled_has_skill[<skill>]>.
+            // -->
+            if (attribute.startsWith("has_skill") && attribute.hasParam()) {
+                return new ElementTag(data.hasSkill(attribute.getParam()));
+            }
+
+            // <--[tag]
+            // @attribute <PlayerTag.skillapi.mana>
+            // @returns ElementTag(Decimal)
+            // @plugin Depenizen, SkillAPI
+            // @deprecated use 'PlayerTag.fabled_mana'.
+            // @description
+            // Deprecated in favor of <@link tag PlayerTag.fabled_mana>.
+            // -->
+            if (attribute.startsWith("mana")) {
+                return new ElementTag(data.getMana());
+            }
+
+            // <--[tag]
+            // @attribute <PlayerTag.skillapi.max_mana>
+            // @returns ElementTag(Decimal)
+            // @plugin Depenizen, SkillAPI
+            // @deprecated use 'PlayerTag.fabled_max_mana'.
+            // @description
+            // Deprecated in favor of <@link tag PlayerTag.fabled_max_mana>.
+            // -->
+            if (attribute.startsWith("max_mana")) {
+                return new ElementTag(data.getMaxMana());
+            }
+
+            if (attribute.getAttribute(1).startsWith("class_") && attribute.hasParam()) {
+
+                PlayerClass playerClass = null;
+                FabledClassTag fabledClass = attribute.paramAsType(FabledClassTag.class);
+                if (fabledClass != null) {
+                    String name = fabledClass.getFabledClass().getName();
+                    for (PlayerClass plClass : data.getClasses()) {
+                        if (plClass.getData().getName().equals(name)) {
+                            playerClass = plClass;
+                            break;
+                        }
+                    }
+                }
+                if (playerClass == null) {
+                    return null;
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_exp[<class>]>
+                // @returns ElementTag(Decimal)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_exp[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_exp[<class>]>.
+                // -->
+                if (attribute.startsWith("class_exp")) {
+                    return new ElementTag(playerClass.getExp());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_required_exp[<class>]>
+                // @returns ElementTag(Decimal)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_required_exp[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_required_exp[<class>]>.
+                // -->
+                if (attribute.startsWith("class_required_exp")) {
+                    return new ElementTag(playerClass.getRequiredExp());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_total_exp[<class>]>
+                // @returns ElementTag(Decimal)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_total_exp[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_total_exp[<class>]>.
+                // -->
+                if (attribute.startsWith("class_total_exp")) {
+                    return new ElementTag(playerClass.getTotalExp());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_level[<class>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_level[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_level[<class>]>.
+                // -->
+                if (attribute.startsWith("class_level")) {
+                    return new ElementTag(playerClass.getLevel());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_points[<class>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_points[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_points[<class>]>.
+                // -->
+                if (attribute.startsWith("class_points")) {
+                    return new ElementTag(playerClass.getPoints());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_maxed[<class>]>
+                // @returns ElementTag(Boolean)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_maxed[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_maxed[<class>]>.
+                // -->
+                if (attribute.startsWith("class_maxed")) {
+                    return new ElementTag(playerClass.isLevelMaxed());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_health[<class>]>
+                // @returns ElementTag(Decimal)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_health[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_health[<class>]>.
+                // -->
+                if (attribute.startsWith("class_health")) {
+                    return new ElementTag(playerClass.getHealth());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.class_mana[<class>]>
+                // @returns ElementTag(Decimal)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_class_mana[<class>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_class_mana[<class>]>.
+                // -->
+                if (attribute.startsWith("class_mana")) {
+                    return new ElementTag(playerClass.getMana());
+                }
+            }
+
+            if (attribute.getAttribute(1).startsWith("skill_") && attribute.hasParam()) {
+
+                PlayerSkill playerSkill = data.getSkill(attribute.getParam());
+                if (playerSkill == null) {
+                    return null;
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_indicator[<skill>]>
+                // @returns ItemTag
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_indicator[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_indicator[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_indicator")) {
+                    return new ItemTag(playerSkill.getData().getIndicator(playerSkill, false));
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_bind[<skill>]>
+                // @returns MaterialTag
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_bind[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_bind[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_bind")) {
+                    return new MaterialTag(playerSkill.getBind());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_level_requirement[<skill>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_requirement[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_requirement[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_level_req")) {
+                    return new ElementTag(playerSkill.getLevelReq());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_level[<skill>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_level[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_level[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_level")) {
+                    return new ElementTag(playerSkill.getLevel());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_points[<skill>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_points[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_points[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_points")) {
+                    return new ElementTag(playerSkill.getPlayerData().getPoints());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_cost[<skill>]>
+                // @returns ElementTag(Number)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_cost[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_cost[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_cost")) {
+                    return new ElementTag(playerSkill.getCost());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_on_cooldown[<skill>]>
+                // @returns ElementTag(Boolean)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_on_cooldown[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_on_cooldown[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_on_cooldown")) {
+                    return new ElementTag(playerSkill.getLevel());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_cooldown[<skill>]>
+                // @returns DurationTag
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_cooldown[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_cooldown[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_cooldown")) {
+                    return new DurationTag(playerSkill.getCooldown());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_maxed[<skill>]>
+                // @returns ElementTag(Boolean)
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_maxed[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_maxed[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_maxed")) {
+                    return new ElementTag(playerSkill.isMaxed());
+                }
+
+                // <--[tag]
+                // @attribute <PlayerTag.skillapi.skill_status[<skill>]>
+                // @returns ElementTag
+                // @plugin Depenizen, SkillAPI
+                // @deprecated use 'PlayerTag.fabled_skill_status[<skill>]'.
+                // @description
+                // Deprecated in favor of <@link tag PlayerTag.fabled_skill_status[<skill>]>.
+                // -->
+                if (attribute.startsWith("skill_status")) {
+                    return new ElementTag(playerSkill.getStatus());
+                }
+            }
+            return null;
+        });
     }
 }

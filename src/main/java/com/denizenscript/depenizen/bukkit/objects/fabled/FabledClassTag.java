@@ -56,10 +56,14 @@ public class FabledClassTag implements ObjectTag {
     //   CONSTRUCTORS
     /////////////////
 
-    static FabledClass fabledClass;
+    FabledClass fabledClass;
 
     public FabledClassTag(FabledClass fabledClass) {
-        FabledClassTag.fabledClass = fabledClass;
+        this.fabledClass = fabledClass;
+    }
+
+    public FabledClass getFabledClass() {
+        return fabledClass;
     }
 
     /////////////////////
@@ -114,7 +118,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the name of this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "name", (attribute, object) -> {
-            return new ElementTag(fabledClass.getName(), true);
+            return new ElementTag(object.fabledClass.getName(), true);
         });
 
         // <--[tag]
@@ -125,7 +129,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the prefix of this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "class_prefix", (attribute, object) -> {
-            return new ElementTag(fabledClass.getPrefix(), true);
+            return new ElementTag(object.fabledClass.getPrefix(), true);
         });
 
         // <--[tag]
@@ -136,7 +140,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns whether this Fabled class requires permission to profess as it.
         // -->
         tagProcessor.registerTag(ElementTag.class, "needs_permission", (attribute, object) -> {
-            return new ElementTag(fabledClass.isNeedsPermission());
+            return new ElementTag(object.fabledClass.isNeedsPermission());
         });
 
         // <--[tag]
@@ -147,7 +151,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the name of the group that this Fabled class falls into.
         // -->
         tagProcessor.registerTag(ElementTag.class, "group_name", (attribute, object) -> {
-            return new ElementTag(fabledClass.getGroup(), true);
+            return new ElementTag(object.fabledClass.getGroup(), true);
         });
 
         // <--[tag]
@@ -158,7 +162,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns whether this Fabled class has a parent class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "has_parent", (attribute, object) -> {
-            return new ElementTag(fabledClass.hasParent());
+            return new ElementTag(object.fabledClass.hasParent());
         });
 
         // <--[tag]
@@ -169,7 +173,8 @@ public class FabledClassTag implements ObjectTag {
         // Returns the parent class of this Fabled class. Returns null if this class does not have a parent.
         // -->
         tagProcessor.registerTag(FabledClassTag.class, "parent", (attribute, object) -> {
-            return fabledClass.getParent() != null ? new FabledClassTag(fabledClass.getParent()) : null;
+            FabledClass classParent = object.fabledClass.getParent();
+            return classParent != null ? new FabledClassTag(classParent) : null;
         });
 
         // <--[tag]
@@ -180,7 +185,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the item icon representing this Fabled class in menus.
         // -->
         tagProcessor.registerTag(ItemTag.class, "icon", (attribute, object) -> {
-            return new ItemTag(fabledClass.getIcon());
+            return new ItemTag(object.fabledClass.getIcon());
         });
 
         // <--[tag]
@@ -191,7 +196,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the maximum level that this Fabled class can reach.
         // -->
         tagProcessor.registerTag(ElementTag.class, "max_level", (attribute, object) -> {
-            return new ElementTag(fabledClass.getMaxLevel());
+            return new ElementTag(object.fabledClass.getMaxLevel());
         });
 
         // <--[tag]
@@ -202,7 +207,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the base amount of health for this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "base_health", (attribute, object) -> {
-            return new ElementTag(fabledClass.getBaseHealth());
+            return new ElementTag(object.fabledClass.getBaseHealth());
         });
 
         // <--[tag]
@@ -213,7 +218,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the amount of health gained per level for this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "health_scale", (attribute, object) -> {
-            return new ElementTag(fabledClass.getHealthScale());
+            return new ElementTag(object.fabledClass.getHealthScale());
         });
 
         // <--[tag]
@@ -224,7 +229,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the base amount of mana for this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "base_mana", (attribute, object) -> {
-            return new ElementTag(fabledClass.getBaseMana());
+            return new ElementTag(object.fabledClass.getBaseMana());
         });
 
         // <--[tag]
@@ -235,7 +240,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the amount of mana gained per level for this Fabled class.
         // -->
         tagProcessor.registerTag(ElementTag.class, "mana_scale", (attribute, object) -> {
-            return new ElementTag(fabledClass.getManaScale());
+            return new ElementTag(object.fabledClass.getManaScale());
         });
 
         // <--[tag]
@@ -246,7 +251,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the alias for mana that this Fabled class uses.
         // -->
         tagProcessor.registerTag(ElementTag.class, "mana_name", (attribute, object) -> {
-            return new ElementTag(fabledClass.getManaName(), true);
+            return new ElementTag(object.fabledClass.getManaName(), true);
         });
 
         // <--[tag]
@@ -257,7 +262,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns whether this Fabled class has mana regeneration.
         // -->
         tagProcessor.registerTag(ElementTag.class, "has_mana_regen", (attribute, object) -> {
-            return new ElementTag(fabledClass.hasManaRegen());
+            return new ElementTag(object.fabledClass.hasManaRegen());
         });
 
         // <--[tag]
@@ -268,7 +273,7 @@ public class FabledClassTag implements ObjectTag {
         // Returns the amount of mana regeneration that this Fabled class has.
         // -->
         tagProcessor.registerTag(ElementTag.class, "mana_regen", (attribute, object) -> {
-            return new ElementTag(fabledClass.getManaRegen());
+            return new ElementTag(object.fabledClass.getManaRegen());
         });
     }
 

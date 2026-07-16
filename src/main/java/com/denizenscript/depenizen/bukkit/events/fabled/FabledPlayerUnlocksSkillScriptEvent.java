@@ -1,10 +1,12 @@
 package com.denizenscript.depenizen.bukkit.events.fabled;
 
-import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizen.events.BukkitScriptEvent;
-import com.denizenscript.denizencore.objects.core.ElementTag;
+import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizencore.objects.ObjectTag;
+import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.scripts.ScriptEntryData;
+import com.denizenscript.depenizen.bukkit.bridges.FabledBridge;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import studio.magemonkey.fabled.api.event.PlayerSkillUnlockEvent;
@@ -13,13 +15,11 @@ public class FabledPlayerUnlocksSkillScriptEvent extends BukkitScriptEvent imple
 
     // <--[event]
     // @Events
-    // fabled player unlocks skill
+    // fabled player unlocks <'skill'>
     //
     // @Location true
     //
     // @Triggers when a player unlocks a skill in Fabled.
-    //
-    // @Switch name:<skill> to only process the event if the skill matches the specified matcher.
     //
     // @Context
     // <context.skill> returns the name of the skill unlocked.
@@ -33,17 +33,23 @@ public class FabledPlayerUnlocksSkillScriptEvent extends BukkitScriptEvent imple
     // -->
 
     public FabledPlayerUnlocksSkillScriptEvent() {
-        registerCouldMatcher("fabled player unlocks skill");
+        registerCouldMatcher("fabled|skillapi player unlocks <'skill'>");
     }
 
     public PlayerSkillUnlockEvent event;
+    public Player player;
+    public String skill;
 
     @Override
     public boolean matches(ScriptPath path) {
-        if (!runGenericSwitchCheck(path, "name", event.getUnlockedSkill().toString())) {
+        if (path.eventArgLowerAt(0).equals("skillapi")) {
+            FabledBridge.oldSkillApiEvents.warn();
+        }
+        String skill = path.eventArgLowerAt(3);
+        if (!skill.equals("skill") && !skill.equals(this.skill)) {
             return false;
         }
-        if (!runInCheck(path, event.getPlayerData().getPlayer().getLocation())) {
+        if (!runInCheck(path, player.getLocation())) {
             return false;
         }
         return super.matches(path);
@@ -51,13 +57,13 @@ public class FabledPlayerUnlocksSkillScriptEvent extends BukkitScriptEvent imple
 
     @Override
     public ScriptEntryData getScriptEntryData() {
-        return new BukkitScriptEntryData(event.getPlayerData().getPlayer());
+        return new BukkitScriptEntryData(player);
     }
 
     @Override
     public ObjectTag getContext(String name) {
         return switch (name) {
-            case "skill" -> new ElementTag(event.getUnlockedSkill().getData().getName(), true);
+            case "skill" -> new ElementTag(skill, true);
             default -> super.getContext(name);
         };
     }
@@ -65,6 +71,8 @@ public class FabledPlayerUnlocksSkillScriptEvent extends BukkitScriptEvent imple
     @EventHandler
     public void onFabledPlayerUnlocksSkill(PlayerSkillUnlockEvent event) {
         this.event = event;
+        player = event.getPlayerData().getPlayer();
+        skill = event.getUnlockedSkill().getData().getName();
         fire(event);
     }
 }

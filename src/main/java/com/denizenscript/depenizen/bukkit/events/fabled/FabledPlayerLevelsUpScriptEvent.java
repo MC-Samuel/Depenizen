@@ -1,11 +1,13 @@
 package com.denizenscript.depenizen.bukkit.events.fabled;
 
-import com.denizenscript.depenizen.bukkit.objects.fabled.FabledClassTag;
-import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizen.events.BukkitScriptEvent;
-import com.denizenscript.denizencore.objects.core.ElementTag;
+import com.denizenscript.denizen.utilities.implementation.BukkitScriptEntryData;
 import com.denizenscript.denizencore.objects.ObjectTag;
+import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.scripts.ScriptEntryData;
+import com.denizenscript.depenizen.bukkit.bridges.FabledBridge;
+import com.denizenscript.depenizen.bukkit.objects.fabled.FabledClassTag;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import studio.magemonkey.fabled.api.event.PlayerLevelUpEvent;
@@ -34,14 +36,18 @@ public class FabledPlayerLevelsUpScriptEvent extends BukkitScriptEvent implement
     // -->
 
     public FabledPlayerLevelsUpScriptEvent() {
-        registerCouldMatcher("fabled player levels up");
+        registerCouldMatcher("skillapi|fabled player levels up");
     }
 
     public PlayerLevelUpEvent event;
+    public Player player;
 
     @Override
     public boolean matches(ScriptPath path) {
-        if (!runInCheck(path, event.getPlayerData().getPlayer().getLocation())) {
+        if (path.eventArgLowerAt(0).equals("skillapi")) {
+            FabledBridge.oldSkillApiEvents.warn();
+        }
+        if (!runInCheck(path, player.getLocation())) {
             return false;
         }
         return super.matches(path);
@@ -49,7 +55,7 @@ public class FabledPlayerLevelsUpScriptEvent extends BukkitScriptEvent implement
 
     @Override
     public ScriptEntryData getScriptEntryData() {
-        return new BukkitScriptEntryData(event.getPlayerData().getPlayer());
+        return new BukkitScriptEntryData(player);
     }
 
     @Override
@@ -65,6 +71,7 @@ public class FabledPlayerLevelsUpScriptEvent extends BukkitScriptEvent implement
     @EventHandler
     public void onFabledPlayerLevelsUp(PlayerLevelUpEvent event) {
         this.event = event;
+        player = event.getPlayerData().getPlayer();
         fire(event);
     }
 }

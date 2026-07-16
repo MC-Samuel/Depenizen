@@ -1,14 +1,17 @@
 package com.denizenscript.depenizen.bukkit.bridges;
 
+import com.denizenscript.denizencore.events.ScriptEvent;
+import com.denizenscript.denizencore.objects.ObjectFetcher;
 import com.denizenscript.denizencore.tags.TagManager;
-import com.denizenscript.depenizen.bukkit.properties.fabled.FabledPlayerExtensions;
+import com.denizenscript.denizencore.utilities.debugging.SlowWarning;
 import com.denizenscript.depenizen.bukkit.Bridge;
 import com.denizenscript.depenizen.bukkit.events.fabled.*;
 import com.denizenscript.depenizen.bukkit.objects.fabled.FabledClassTag;
-import com.denizenscript.denizencore.events.ScriptEvent;
-import com.denizenscript.denizencore.objects.ObjectFetcher;
+import com.denizenscript.depenizen.bukkit.properties.fabled.FabledPlayerExtensions;
 
 public class FabledBridge extends Bridge {
+
+    public static SlowWarning oldSkillApiEvents = new SlowWarning("oldSkillApiEvents", "Events starting with 'skillapi' have been deprecated in favor of 'fabled'. See the meta site for more information.");
 
     @Override
     public void init() {
