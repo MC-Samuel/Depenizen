@@ -7,6 +7,7 @@ import com.denizenscript.denizencore.tags.TagManager;
 import com.denizenscript.depenizen.bukkit.Bridge;
 import com.denizenscript.depenizen.bukkit.properties.supervanish.SuperVanishPlayerExtensions;
 import de.myzelyam.api.vanish.VanishAPI;
+import de.myzelyam.supervanish.SuperVanish;
 
 public class SuperVanishBridge extends Bridge {
 
@@ -46,8 +47,11 @@ public class SuperVanishBridge extends Bridge {
         }
     }
 
+    public static SuperVanish apiInstance;
+
     @Override
     public void init() {
+        apiInstance = (SuperVanish) plugin;
         SuperVanishPlayerExtensions.register();
         new SuperVanishTagBase();
     }
