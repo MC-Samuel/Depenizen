@@ -93,7 +93,7 @@ public class WorldEditCommand extends AbstractCommand {
 
     public enum Action {CREATE_SCHEMATIC, COPY_TO_CLIPBOARD, PASTE}
 
-    public void autoExecute(ScriptEntry scriptEntry,
+    public static void autoExecute(ScriptEntry scriptEntry,
                                    @ArgName("action") @ArgLinear @ArgDefaultNull Action action,
                                    @ArgName("file") @ArgPrefixed @ArgDefaultNull ElementTag file,
                                    @ArgName("cuboid") @ArgPrefixed @ArgDefaultNull CuboidTag cuboid,
@@ -310,7 +310,7 @@ public class WorldEditCommand extends AbstractCommand {
     }
 
 
-    public CuboidRegion cuboidToWECuboid(CuboidTag cuboid) {
+    public static CuboidRegion cuboidToWECuboid(CuboidTag cuboid) {
         LocationTag top = cuboid.getHigh(0);
         LocationTag bottom = cuboid.getLow(0);
         BlockVector3 topVector = BlockVector3.at(top.getBlockX(), top.getBlockY(), top.getBlockZ());
