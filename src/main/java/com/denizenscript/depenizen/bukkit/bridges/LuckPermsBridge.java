@@ -1,10 +1,12 @@
 package com.denizenscript.depenizen.bukkit.bridges;
 
+import com.denizenscript.denizencore.DenizenCore;
 import com.denizenscript.denizencore.objects.ObjectFetcher;
 import com.denizenscript.denizencore.objects.core.ListTag;
 import com.denizenscript.denizencore.tags.PseudoObjectTagBase;
 import com.denizenscript.denizencore.tags.TagManager;
 import com.denizenscript.depenizen.bukkit.Bridge;
+import com.denizenscript.depenizen.bukkit.commands.luckperms.LuckPermsCommand;
 import com.denizenscript.depenizen.bukkit.objects.luckperms.LuckPermsGroupTag;
 import com.denizenscript.depenizen.bukkit.objects.luckperms.LuckPermsTrackTag;
 import com.denizenscript.depenizen.bukkit.properties.luckperms.LuckPermsPlayerExtensions;
@@ -65,6 +67,7 @@ public class LuckPermsBridge extends Bridge {
     @Override
     public void init() {
         luckPermsInstance = LuckPermsProvider.get();
+        DenizenCore.commandRegistry.registerCommand(LuckPermsCommand.class);
         LuckPermsPlayerExtensions.register();
         ObjectFetcher.registerWithObjectFetcher(LuckPermsGroupTag.class, LuckPermsGroupTag.tagProcessor);
         ObjectFetcher.registerWithObjectFetcher(LuckPermsTrackTag.class, LuckPermsTrackTag.tagProcessor);

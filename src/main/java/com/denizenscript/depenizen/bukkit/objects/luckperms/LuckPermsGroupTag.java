@@ -2,12 +2,15 @@ package com.denizenscript.depenizen.bukkit.objects.luckperms;
 
 import com.denizenscript.denizencore.objects.Fetchable;
 import com.denizenscript.denizencore.objects.ObjectTag;
+import com.denizenscript.denizencore.objects.core.DurationTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.tags.Attribute;
 import com.denizenscript.denizencore.tags.ObjectTagProcessor;
 import com.denizenscript.denizencore.tags.TagContext;
 import com.denizenscript.depenizen.bukkit.bridges.LuckPermsBridge;
 import net.luckperms.api.model.group.Group;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.PermissionNode;
 
 import java.util.OptionalInt;
 
@@ -152,6 +155,37 @@ public class LuckPermsGroupTag implements ObjectTag {
         // -->
         tagProcessor.registerTag(ElementTag.class, ElementTag.class, "has_permission", (attribute, object, p) -> {
             return new ElementTag(object.getGroup().getCachedData().getPermissionData().checkPermission(p.asString()).asBoolean());
+        });
+
+        // <--[tag]
+        // @attribute <LuckPermsGroupTag.permission_expiry[<permission.node>]>
+        // @returns DurationTag
+        // @plugin Depenizen, LuckPerms
+        // @description
+        // Returns how long a group has a permission for.
+        // If the group does not have the specific permission set, this will return the time for the closest wildcard permission, if any.
+        // -->
+        tagProcessor.registerTag(DurationTag.class, ElementTag.class, "permission_expiry", (attribute, object, p) -> {
+            String permission = p.asString();
+            PermissionNode bestNode = null;
+            int wildcardLevel = 0;
+            for (PermissionNode node : object.getGroup().getNodes(NodeType.PERMISSION)) {
+                if (node.getKey().equalsIgnoreCase(permission)) {
+                    bestNode = node;
+                    break;
+                }
+                else if (node.isWildcard() && node.getWildcardLevel().isPresent()) {
+                    int size = node.getKey().substring(0, node.getKey().length() - 1).length();
+                    if (permission.length() < size || !permission.substring(0, size).equalsIgnoreCase(node.getKey().substring(0, size))) {
+                        continue;
+                    }
+                    if (node.getWildcardLevel().getAsInt() > wildcardLevel) {
+                        bestNode = node;
+                        wildcardLevel = node.getWildcardLevel().getAsInt();
+                    }
+                }
+            }
+            return bestNode != null ? new DurationTag(bestNode.getExpiryDuration() != null ? (int) bestNode.getExpiryDuration().getSeconds() : 0) : null;
         });
     }
 
