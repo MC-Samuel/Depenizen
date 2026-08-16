@@ -2,6 +2,7 @@ package com.denizenscript.depenizen.bukkit.bridges;
 
 import com.denizenscript.denizencore.DenizenCore;
 import com.denizenscript.denizencore.objects.ObjectFetcher;
+import com.denizenscript.denizencore.objects.core.DurationTag;
 import com.denizenscript.denizencore.objects.core.ListTag;
 import com.denizenscript.denizencore.tags.PseudoObjectTagBase;
 import com.denizenscript.denizencore.tags.TagManager;
@@ -12,6 +13,9 @@ import com.denizenscript.depenizen.bukkit.objects.luckperms.LuckPermsTrackTag;
 import com.denizenscript.depenizen.bukkit.properties.luckperms.LuckPermsPlayerExtensions;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.node.types.PermissionNode;
+
+import java.util.Collection;
 
 public class LuckPermsBridge extends Bridge {
 
@@ -83,5 +87,27 @@ public class LuckPermsBridge extends Bridge {
         TagManager.registerTagHandler(LuckPermsGroupTag.class, LuckPermsGroupTag.class, "luckperms_group", (attribute, param) -> {
             return param;
         });
+    }
+
+    public static DurationTag getPermissionExpiry(Collection<PermissionNode> nodes, String permission) {
+        PermissionNode bestNode = null;
+        int wildcardLevel = 0;
+        for (PermissionNode node : nodes) {
+            if (node.getKey().equalsIgnoreCase(permission)) {
+                bestNode = node;
+                break;
+            }
+            else if (node.isWildcard() && node.getWildcardLevel().isPresent()) {
+                int size = node.getKey().substring(0, node.getKey().length() - 1).length();
+                if (permission.length() < size || !permission.substring(0, size).equalsIgnoreCase(node.getKey().substring(0, size))) {
+                    continue;
+                }
+                if (node.getWildcardLevel().getAsInt() > wildcardLevel) {
+                    bestNode = node;
+                    wildcardLevel = node.getWildcardLevel().getAsInt();
+                }
+            }
+        }
+        return bestNode != null ? new DurationTag(bestNode.getExpiryDuration() != null ? (int) bestNode.getExpiryDuration().getSeconds() : 0) : null;
     }
 }

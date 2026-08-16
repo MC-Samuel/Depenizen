@@ -7,6 +7,7 @@ import com.denizenscript.denizencore.objects.core.*;
 import com.denizenscript.denizencore.scripts.ScriptEntry;
 import com.denizenscript.denizencore.scripts.commands.AbstractCommand;
 import com.denizenscript.denizencore.scripts.commands.generator.*;
+import com.denizenscript.denizencore.utilities.debugging.Debug;
 import com.denizenscript.denizencore.utilities.text.StringHolder;
 import com.denizenscript.depenizen.bukkit.bridges.LuckPermsBridge;
 import com.denizenscript.depenizen.bukkit.objects.luckperms.LuckPermsGroupTag;
@@ -14,6 +15,7 @@ import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeBuilder;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -21,14 +23,14 @@ public class LuckPermsCommand extends AbstractCommand {
 
     public LuckPermsCommand() {
         setName("luckperms");
-        setSyntax("luckperms [{set}/unset] [user:<player>/group:<group>] [permission] (state:{true}/false) (duration:<duration>) (contexts:<map>)");
+        setSyntax("luckperms ({set}/unset) [users:<player>|.../groups:<group>|...] [permission] (state:{true}/false) (duration:<duration>) (contexts:<map>)");
         setRequiredArguments(2, 6);
         autoCompile();
     }
 
     // <--[command]
     // @Name mcMMO
-    // @Syntax luckperms [{set}/unset] [user:<player>/group:<group>] [permission] (state:{true}/false) (duration:<duration>) (contexts:<map>)
+    // @Syntax luckperms ({set}/unset) [users:<player>|.../groups:<group>|...] [permission] (state:{true}/false) (duration:<duration>) (contexts:<map>)
     // @Group Depenizen
     // @Plugin Depenizen, mcMMO
     // @Required 2
@@ -47,25 +49,25 @@ public class LuckPermsCommand extends AbstractCommand {
     //
     // @Tags
     // <PlayerTag.has_permission[<permission.node>]>
-    // <PlayerTag.luckperms_permission_expiry[<permission.node>]>
+    // <PlayerTag.luckperms_permission_expiration[<permission.node>]>
     // <LuckPermsGroupTag.has_permission[<permission.node>]>
-    // <LuckPermsGroupTag.permission_expiry[<permission.node>]>
+    // <LuckPermsGroupTag.permission_expiration[<permission.node>]>
     //
     // @Usage
-    // Use to give a player the 'dscript.help' permission.
-    // - luckperms set user:<player> dscript.help state:true
+    // Use to give two players the 'dscript.help' permission.
+    // - luckperms set users:<[player]>|<[other_player]> dscript.help state:true
     //
     // @Usage
     // Use to give a player the 'dscript.warp' permission for 5 minutes in the main world.
-    // - luckperms user:<player> dscript.warp duration:5m contexts:[world=world]
+    // - luckperms users:<player> dscript.warp duration:5m contexts:[world=world]
     //
     // @Usage
-    // Use to disallow a group access to the 'dscript.spawn' permission in the nether and end.
-    // - luckperms group:<group> dscript.spawn state:false contexts:[dimension_type=the_nether|the_end]
+    // Use to disallow two groups access to the 'dscript.spawn' permission in the nether and end.
+    // - luckperms groups:<[group]>|<[other_group]> dscript.spawn state:false contexts:[dimension_type=the_nether|the_end]
     //
     // @Usage
     // Use to unset the 'dscript.ban' permission back to the default for a player when in survival mode on the hub server.
-    // - luckperms unset user:<player> dscript.ban contexts:[gamemode=survival;server=hub]
+    // - luckperms unset users:<player> dscript.ban contexts:[gamemode=survival;server=hub]
     //
     // -->
 
@@ -73,17 +75,17 @@ public class LuckPermsCommand extends AbstractCommand {
 
     public static void autoExecute(ScriptEntry scriptEntry,
                                    @ArgName("action") @ArgDefaultText("set") Action action,
-                                   @ArgName("user") @ArgPrefixed @ArgDefaultNull PlayerTag player,
-                                   @ArgName("group") @ArgPrefixed @ArgDefaultNull LuckPermsGroupTag group,
+                                   @ArgName("user") @ArgPrefixed @ArgDefaultNull @ArgSubType(PlayerTag.class) List<PlayerTag> players,
+                                   @ArgName("group") @ArgPrefixed @ArgDefaultNull @ArgSubType(LuckPermsGroupTag.class) List<LuckPermsGroupTag> groups,
                                    @ArgName("permission") @ArgLinear String permission,
                                    @ArgName("state") @ArgPrefixed @ArgDefaultText("true") boolean state,
                                    @ArgName("duration") @ArgPrefixed @ArgDefaultNull DurationTag duration,
                                    @ArgName("contexts") @ArgPrefixed @ArgDefaultNull MapTag contexts) {
-        if (player == null && group == null) {
-            throw new InvalidArgumentsRuntimeException("Must specify either a player or a group!");
+        if (players == null && groups == null) {
+            throw new InvalidArgumentsRuntimeException("Must specify either players or groups!");
         }
-        if (player != null && group != null) {
-            throw new InvalidArgumentsRuntimeException("Cannot specify both a player and a group!");
+        if (players != null && groups != null) {
+            throw new InvalidArgumentsRuntimeException("Cannot specify both players and groups!");
         }
         NodeBuilder<?, ?> nodeBuilder = Node.builder(permission).value(state);
         if (duration != null) {
@@ -99,34 +101,42 @@ public class LuckPermsCommand extends AbstractCommand {
         Node node = nodeBuilder.build();
         switch (action) {
             case SET: {
-                if (player != null) {
-                    User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
-                    if (user == null) {
-                        throw new InvalidArgumentsRuntimeException("This user does not exist, have they joined the server before?");
+                if (players != null) {
+                    for (PlayerTag player : players) {
+                        User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
+                        if (user == null) {
+                            Debug.echoError("User " + player.getUUID() + " does not exist, have they joined the server before?");
+                            continue;
+                        }
+                        user.data().add(node);
+                        LuckPermsBridge.luckPermsInstance.getUserManager().saveUser(user);
                     }
-                    user.data().add(node);
-                    LuckPermsBridge.luckPermsInstance.getUserManager().saveUser(user);
                 }
                 else {
-                    group.getGroup().data().add(node);
-                    LuckPermsBridge.luckPermsInstance.getGroupManager().saveGroup(group.getGroup());
+                    for (LuckPermsGroupTag group : groups) {
+                        group.getGroup().data().add(node);
+                        LuckPermsBridge.luckPermsInstance.getGroupManager().saveGroup(group.getGroup());
+                    }
                 }
-                break;
             }
             case UNSET: {
-                if (player != null) {
-                    User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
-                    if (user == null) {
-                        throw new InvalidArgumentsRuntimeException("This user does not exist, have they joined the server before?");
+                if (players != null) {
+                    for (PlayerTag player : players) {
+                        User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
+                        if (user == null) {
+                            Debug.echoError("User " + player.getUUID() + " does not exist, have they joined the server before?");
+                            continue;
+                        }
+                        user.data().remove(node);
+                        LuckPermsBridge.luckPermsInstance.getUserManager().saveUser(user);
                     }
-                    user.data().remove(node);
-                    LuckPermsBridge.luckPermsInstance.getUserManager().saveUser(user);
                 }
                 else {
-                    group.getGroup().data().remove(node);
-                    LuckPermsBridge.luckPermsInstance.getGroupManager().saveGroup(group.getGroup());
+                    for (LuckPermsGroupTag group : groups) {
+                        group.getGroup().data().remove(node);
+                        LuckPermsBridge.luckPermsInstance.getGroupManager().saveGroup(group.getGroup());
+                    }
                 }
-                break;
             }
         }
     }
