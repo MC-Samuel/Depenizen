@@ -22,6 +22,7 @@ public class SuperiorSkyblockIslandInviteScriptEvent extends BukkitScriptEvent i
     //
     // @Context
     // <context.island> returns a SuperiorSkyblockIslandTag of the island.
+    // <context.inviter> returns a PlayerTag of the island inviter.
     //
     // @Plugin Depenizen, SuperiorSkyblock
     //

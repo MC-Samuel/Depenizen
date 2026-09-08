@@ -22,7 +22,7 @@ public class SuperiorSkyblockPlayerLeavesIslandScriptEvent extends BukkitScriptE
     //
     // @Context
     // <context.island> returns a SuperiorSkyblockIslandTag of the island.
-    // <context.cause> returns why the player left the area. Possible outputs are 'PLAYER_MOVE', 'PLAYER_QUIT', 'PLAYER_TELEPORT', and 'INVALID'.
+    // <context.cause> returns why the player left the area. Possible causes can be found at <@link url https://bg-software.com/superiorskyblock/api/com/bgsoftware/superiorskyblock/api/events/IslandLeaveEvent.LeaveCause.html>.
     //
     // @Plugin Depenizen, SuperiorSkyblock
     //

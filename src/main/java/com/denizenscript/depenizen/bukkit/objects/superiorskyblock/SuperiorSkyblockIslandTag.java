@@ -4,6 +4,7 @@ import com.bgsoftware.superiorskyblock.SuperiorSkyblockPlugin;
 import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
 import com.bgsoftware.superiorskyblock.api.enums.MemberRemoveReason;
 import com.bgsoftware.superiorskyblock.api.enums.Rating;
+import com.bgsoftware.superiorskyblock.api.hooks.WorldsProvider;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.island.IslandFlag;
 import com.bgsoftware.superiorskyblock.api.world.Dimension;
@@ -69,6 +70,10 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
 
     // Yes, this is the actual UUID that is associated with the spawn island.
     public static final UUID spawnIsland = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
+    public static boolean isSpawnIsland(SuperiorSkyblockIslandTag island) {
+        return island.getIsland().isSpawn();
+    }
 
     public static boolean matches(String string) {
         if (string.startsWith("superiorskyblock_island@")) {
@@ -157,7 +162,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // Returns the bank balance of an island.
         // -->
         tagProcessor.registerTag(ElementTag.class, "balance", (attribute, object) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 attribute.echoError("Spawn islands do not have a balance.");
                 return null;
             }
@@ -315,9 +320,10 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // -->
         tagProcessor.registerTag(ListTag.class, "homes", (attribute, object) -> {
             ListTag values = new ListTag();
+            WorldsProvider provider = SuperiorSkyblockAPI.getProviders().getWorldsProvider();
             for (Map.Entry<Dimension, WorldPosition> map : object.getIsland().getIslandHomes().entrySet()) {
                 WorldPosition pos = map.getValue();
-                values.addObject(new LocationTag(pos.getX(), pos.getY(), pos.getZ(), SuperiorSkyblockAPI.getProviders().getWorldsProvider().getIslandsWorld(object.getIsland(), map.getKey()).getName()));
+                values.addObject(new LocationTag(pos.getX(), pos.getY(), pos.getZ(), provider.getIslandsWorld(object.getIsland(), map.getKey()).getName()));
             }
             return values;
         });
@@ -330,7 +336,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // Returns whether this is the spawn island.
         // -->
         tagProcessor.registerTag(ElementTag.class, "is_spawn_island", (attribute, object) -> {
-            return new ElementTag(object.getIsland().isSpawn());
+            return new ElementTag(isSpawnIsland(object));
         });
 
         // <--[tag]
@@ -342,7 +348,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // Returns the leader of an island.
         // -->
         tagProcessor.registerTag(PlayerTag.class, "leader", (attribute, object) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 attribute.echoError("Spawn islands do not have a leader.");
                 return null;
             }
@@ -494,7 +500,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.coop_members>
         // -->
         tagProcessor.registerMechanism("add_coop_member", false, PlayerTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a team of players.");
             }
             else if (object.getIsland().getCoopPlayers().contains(SuperiorSkyblockBridge.getSuperiorPlayer(value))) {
@@ -516,7 +522,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.members>
         // -->
         tagProcessor.registerMechanism("add_member", false, PlayerTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a team of players.");
             }
             else if (object.getIsland().getIslandMembers(true).contains(SuperiorSkyblockBridge.getSuperiorPlayer(value))) {
@@ -538,7 +544,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.balance>
         // -->
         tagProcessor.registerMechanism("balance", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a balance.");
             }
             else if (mechanism.requireDouble()) {
@@ -557,7 +563,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.banned_players>
         // -->
         tagProcessor.registerMechanism("ban_player", false, PlayerTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have banned players.");
             }
             else if (object.getIsland().getBannedPlayers().contains(SuperiorSkyblockBridge.getSuperiorPlayer(value))) {
@@ -625,7 +631,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.description>
         // -->
         tagProcessor.registerMechanism("description", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a description.");
             }
             else {
@@ -678,7 +684,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // @plugin Depenizen, SuperiorSkyblock
         // @description
         // Transfers island leadership to the specified player.
-        // Since only one player can have the 'Leader' role at a time, the current leader will be shifted to the 'Admin' role.
+        // Since only one player can have the 'Leader' role at a time, the current leader will be shifted to the next highest role.
         // @tags
         // <SuperiorSkyblockIslandTag.leader>
         // -->
@@ -697,7 +703,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.locked>
         // -->
         tagProcessor.registerMechanism("locked", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot be locked.");
             }
             else if (mechanism.requireBoolean()) {
@@ -716,7 +722,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.name>
         // -->
         tagProcessor.registerMechanism("name", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a name.");
             }
             else if (value.asString().isEmpty()) {
@@ -793,7 +799,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.size>
         // -->
         tagProcessor.registerMechanism("size", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have their size adjusted.");
             }
             else if (mechanism.requireInteger()) {
@@ -818,7 +824,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.team_limit>
         // -->
         tagProcessor.registerMechanism("team_limit", false, ElementTag.class, (object, mechanism, value) -> {
-            if (object.getIsland().isSpawn()) {
+            if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a team.");
             }
             else if (mechanism.requireInteger()) {
@@ -851,6 +857,6 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         });
     }
 
-    public static final ObjectTagProcessor<SuperiorSkyblockIslandTag> tagProcessor = new ObjectTagProcessor<>();
+    public static ObjectTagProcessor<SuperiorSkyblockIslandTag> tagProcessor = new ObjectTagProcessor<>();
 
 }
