@@ -75,8 +75,8 @@ public class LuckPermsCommand extends AbstractCommand {
 
     public static void autoExecute(ScriptEntry scriptEntry,
                                    @ArgName("action") @ArgDefaultText("set") Action action,
-                                   @ArgName("user") @ArgPrefixed @ArgDefaultNull @ArgSubType(PlayerTag.class) List<PlayerTag> players,
-                                   @ArgName("group") @ArgPrefixed @ArgDefaultNull @ArgSubType(LuckPermsGroupTag.class) List<LuckPermsGroupTag> groups,
+                                   @ArgName("users") @ArgPrefixed @ArgDefaultNull @ArgSubType(PlayerTag.class) List<PlayerTag> players,
+                                   @ArgName("groups") @ArgPrefixed @ArgDefaultNull @ArgSubType(LuckPermsGroupTag.class) List<LuckPermsGroupTag> groups,
                                    @ArgName("permission") @ArgLinear String permission,
                                    @ArgName("state") @ArgPrefixed @ArgDefaultText("true") boolean state,
                                    @ArgName("duration") @ArgPrefixed @ArgDefaultNull DurationTag duration,
