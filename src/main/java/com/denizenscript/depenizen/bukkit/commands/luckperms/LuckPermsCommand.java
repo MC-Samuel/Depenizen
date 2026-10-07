@@ -100,7 +100,7 @@ public class LuckPermsCommand extends AbstractCommand {
         }
         Node node = nodeBuilder.build();
         switch (action) {
-            case SET: {
+            case SET -> {
                 if (players != null) {
                     for (PlayerTag player : players) {
                         User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
@@ -119,7 +119,7 @@ public class LuckPermsCommand extends AbstractCommand {
                     }
                 }
             }
-            case UNSET: {
+            case UNSET -> {
                 if (players != null) {
                     for (PlayerTag player : players) {
                         User user = LuckPermsBridge.luckPermsInstance.getUserManager().getUser(player.getUUID());
