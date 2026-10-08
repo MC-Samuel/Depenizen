@@ -191,7 +191,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // Returns the current biome of an island.
         // -->
         tagProcessor.registerTag(BiomeTag.class, "biome", (attribute, object) -> {
-            return new BiomeTag(object.getIsland().getBiome());
+            return new BiomeTag(object.getIsland().getBiome(SuperiorSkyblockAPI.getSettings().getWorlds().getDefaultWorldDimension()));
         });
 
         // <--[tag]
@@ -226,13 +226,11 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // Returns the center of an island in the provided world.
         // -->
         tagProcessor.registerTag(LocationTag.class, WorldTag.class, "center", (attribute, object, value) -> {
-            if (SuperiorSkyblockAPI.getProviders().getWorldsProvider().isIslandsWorld(value.getWorld())) {
-                return new LocationTag(object.getIsland().getCenter(SuperiorSkyblockAPI.getProviders().getWorldsProvider().getIslandsWorldDimension(value.getWorld())));
-            }
-            else {
+            if (!SuperiorSkyblockBridge.isIslandsWorld(value.getWorld())) {
                 attribute.echoError("The provided world does not contain islands.");
                 return null;
             }
+            return new LocationTag(object.getIsland().getCenter(SuperiorSkyblockBridge.getIslandsWorldDimension(value.getWorld())));
         });
 
         // <--[tag]
@@ -259,12 +257,13 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // -->
         tagProcessor.registerTag(TimeTag.class, "creation_time", (attribute, object) -> {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(SuperiorSkyblockPlugin.getPlugin().getSettings().getDateFormat());
+            String creation = object.getIsland().getCreationTimeDate();
             try {
-                return new TimeTag(LocalDateTime.parse(object.getIsland().getCreationTimeDate(), formatter).atZone(ZoneOffset.UTC));
+                return new TimeTag(LocalDateTime.parse(creation, formatter).atZone(ZoneOffset.UTC));
             }
             catch (DateTimeParseException e) {
                 try {
-                    LocalDate date = LocalDate.parse(object.getIsland().getCreationTimeDate(), formatter);
+                    LocalDate date = LocalDate.parse(creation, formatter);
                     return new TimeTag(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 0, 0, 0, 0, ZoneOffset.UTC);
                 }
                 catch (DateTimeParseException ex) {
@@ -320,7 +319,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // -->
         tagProcessor.registerTag(ListTag.class, "homes", (attribute, object) -> {
             ListTag values = new ListTag();
-            WorldsProvider provider = SuperiorSkyblockAPI.getProviders().getWorldsProvider();
+            WorldsProvider provider = SuperiorSkyblockBridge.getWorldsProvider();
             for (Map.Entry<Dimension, WorldPosition> map : object.getIsland().getIslandHomes().entrySet()) {
                 WorldPosition pos = map.getValue();
                 values.addObject(new LocationTag(pos.getX(), pos.getY(), pos.getZ(), provider.getIslandsWorld(object.getIsland(), map.getKey()).getName()));
@@ -444,12 +443,14 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // @plugin Depenizen, SuperiorSkyblock
         // @mechanism <SuperiorSkyblockIslandTag.settings>
         // @description
-        // Returns the settings of an island.
+        // Returns the settings of an island in 'SETTING:VALUE' format.
+        // See <@link tag SuperiorSkyblock.island_settings> for a list of possible settings.
         // -->
         tagProcessor.registerTag(MapTag.class, "settings", (attribute, object) -> {
+            Island island = object.getIsland();
             MapTag values = new MapTag();
             for (IslandFlag flag : IslandFlag.values()) {
-                values.putObject(flag.getName(), new ElementTag(object.getIsland().hasSettingsEnabled(flag)));
+                values.putObject(flag.getName(), new ElementTag(island.hasSettingsEnabled(flag)));
             }
             return values;
         });
@@ -585,7 +586,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // <SuperiorSkyblockIslandTag.biome>
         // -->
         tagProcessor.registerMechanism("biome", false, BiomeTag.class, (object, mechanism, value) -> {
-            object.getIsland().setBiome(Registry.BIOME.get(value.getBiome().getKey()));
+            object.getIsland().setBiome(SuperiorSkyblockAPI.getSettings().getWorlds().getDefaultWorldDimension(), Registry.BIOME.get(value.getBiome().getKey()));
         });
 
         // <--[mechanism]
@@ -757,8 +758,7 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         // @plugin Depenizen, SuperiorSkyblock
         // @description
         // Controls the settings of an island.
-        // Valid settings are ALWAYS_DAY, ALWAYS_MIDDLE_DAY, ALWAYS_MIDDLE_NIGHT, ALWAYS_NIGHT, ALWAYS_RAIN, ALWAYS_SHINY, CREEPER_EXPLOSION, CROPS_GROWTH, EGG_LAY, ENDERMAN_GRIEF, FIRE_SPREAD,
-        // GHAST_FIREBALL, LAVA_FLOW, NATURAL_ANIMALS_SPAWN, NATURAL_MONSTER_SPAWN, PVP, SPAWNER_ANIMALS_SPAWN, SPAWNER_MONSTER_SPAWN, TNT_EXPLOSION, TREE_GROWTH, WATER_FLOW, and WITHER_EXPLOSION.
+        // See <@link tag SuperiorSkyblock.island_settings> for a list of possible settings.
         // @example
         // # Enables pvp and disables creeper explosions.
         // - adjust <[island]> settings:<map[pvp=true;creeper_explosion=false]>
@@ -801,15 +801,17 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         tagProcessor.registerMechanism("size", false, ElementTag.class, (object, mechanism, value) -> {
             if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have their size adjusted.");
+                return;
             }
-            else if (mechanism.requireInteger()) {
-                int max = SuperiorSkyblockPlugin.getPlugin().getSettings().getMaxIslandSize();
-                if (value.asInt() >= 1 && value.asInt() <= max) {
-                    object.getIsland().setIslandSize(value.asInt());
-                }
-                else {
-                    mechanism.echoError("Island size must be between 1 and " + max + ".");
-                }
+            else if (!(mechanism.requireInteger())) {
+                return;
+            }
+            int max = SuperiorSkyblockPlugin.getPlugin().getSettings().getMaxIslandSize();
+            if (value.asInt() < 1 || value.asInt() > max) {
+                mechanism.echoError("Island size must be between 1 and " + max + ".");
+            }
+            else {
+                object.getIsland().setIslandSize(value.asInt());
             }
         });
 
@@ -826,14 +828,16 @@ public class SuperiorSkyblockIslandTag implements ObjectTag, Adjustable {
         tagProcessor.registerMechanism("team_limit", false, ElementTag.class, (object, mechanism, value) -> {
             if (isSpawnIsland(object)) {
                 mechanism.echoError("Spawn islands cannot have a team.");
+                return;
             }
-            else if (mechanism.requireInteger()) {
-                if (value.asInt() >= 1) {
-                    object.getIsland().setTeamLimit(value.asInt());
-                }
-                else {
-                    mechanism.echoError("Island team limit must be a positive integer.");
-                }
+            else if (!(mechanism.requireInteger())) {
+                return;
+            }
+            if (value.asInt() < 1) {
+                mechanism.echoError("Island team limit must be a positive integer.");
+            }
+            else {
+                object.getIsland().setTeamLimit(value.asInt());
             }
         });
 
